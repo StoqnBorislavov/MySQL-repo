@@ -48,10 +48,12 @@ CREATE VIEW v_employees_salaries AS
 SELECT first_name, last_name, salary FROM employees;
 SELECT * FROM v_employees_salaries;
 # 16.	Create View Employees with Job Titles
-CREATE VIEW v_employees_job_titles AS
-SELECT concat(first_name, ' ', middle_name, ' ', last_name) AS full_name, job_title
-FROM employees
-WHERE middle_name IS NULL = '';
+ALTER VIEW v_employees_job_titles AS
+SELECT 
+CASE WHEN middle_name IS NULL THEN concat(first_name, ' ', last_name)
+ELSE concat(first_name, ' ', middle_name, ' ', last_name)
+END AS full_name, job_title
+FROM employees;
 SELECT * FROM v_employees_job_titles;
 # 17.  Distinct Job Titles
 SELECT DISTINCT job_title FROM employees
