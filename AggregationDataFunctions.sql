@@ -126,8 +126,44 @@ ORDER BY e.department_id;
 SELECT  COUNT(e.employee_id) - COUNT(e.manager_id) AS count
 FROM employees e;
 
+# 17.	3rd Highest Salary*
+# First Max salary
+SELECT e.department_id, MAX(e.salary)
+FROM employees e 
+GROUP BY e.department_id;
+# Second Max salary
+SELECT e.department_id, MAX(e.salary)
+FROM employees e
+JOIN (
+	SELECT e.department_id, MAX(e.salary) AS first_salary
+	FROM employees e 
+	GROUP BY e.department_id
+) AS `first_max_salary`
+ON e.department_id = first_max_salary.department_id
+WHERE e.salary < first_salary
+GROUP BY e.department_id;
+# Third Max salary
+SELECT e.department_id, MAX(e.salary) AS third_max_salary
+FROM employees e
+JOIN(
+	SELECT e.department_id, MAX(e.salary) AS second_salary
+	FROM employees e
+	JOIN (
+		SELECT e.department_id, MAX(e.salary) AS first_salary
+		FROM employees e 
+		GROUP BY e.department_id
+		) AS `first_max_salary`
+	ON e.department_id = first_max_salary.department_id
+	WHERE e.salary < first_salary
+	GROUP BY e.department_id
+) AS `second_max_salary`
+ON  e.department_id = second_max_salary.department_id
+WHERE e.salary < second_max_salary.second_salary
+GROUP BY e.department_id
+ORDER BY e.department_id;
+
 # 19.	Departments Total Salaries
-SELECT e.department_id, ROUND(SUM(e.salary),2) AS total_salary
+SELECT e.department_id, SUM(e.salary) AS total_salary
 FROM employees e
 GROUP BY e.department_id
 ORDER BY e.department_id;
