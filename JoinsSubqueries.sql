@@ -44,11 +44,11 @@ LIMIT 5;
 
 # 5.	Employees Without Project
 SELECT e.employee_id,
-		e.first_name,
-        em.project_id
+		e.first_name
 FROM employees e
 LEFT JOIN employees_projects em
 ON e.employee_id = em.employee_id
+WHERE em.project_id IS NULL
 ORDER BY e.employee_id DESC
 LIMIT 3;
 
@@ -156,6 +156,7 @@ ORDER BY mountain_range DESC;
 # 16.	Countries without any Mountains
 SELECT COUNT(*)
 FROM countries c
-JOIN mountains_countries mc
+LEFT JOIN mountains_countries mc
 ON c.country_code = mc.country_code
-GROUP BY c.country_name;
+WHERE mc.mountain_id IS NULL;
+
