@@ -43,25 +43,25 @@ ORDER BY e.department_id DESC, e.salary DESC
 LIMIT 5;
 
 # 5.	Employees Without Project
-SELECT e.employee_id,
-		e.first_name
+SELECT 	e.`employee_id`,
+		e.`first_name`
 FROM employees e
 LEFT JOIN employees_projects em
-ON e.employee_id = em.employee_id
-WHERE em.project_id IS NULL
-ORDER BY e.employee_id DESC
+ON em.`employee_id` = e.`employee_id`
+WHERE em.`project_id` IS NULL
+ORDER BY e.`employee_id` DESC
 LIMIT 3;
 
 # 6.	Employees Hired After
-SELECT 	e.first_name,
-		e.last_name,
-        e.hire_date,
-        d.name AS dept_name
+SELECT 	e.`first_name`,
+		e.`last_name`,
+        e.`hire_date`,
+        d.`name` AS dept_name
 FROM employees e
 JOIN departments d
-ON e.department_id = d.department_id
-WHERE e.hire_date > '1999-01-01' AND (d.name = 'Sales' OR d.name = 'Finance')
-ORDER BY e.hire_date;
+ON e.`department_id` = d.`department_id`
+WHERE e.`hire_date` > '1999-01-01' AND (d.`name` = 'Sales' OR d.`name` = 'Finance')
+ORDER BY e.`hire_date`;
 
 # 7.	Employees with Project
 SELECT 	e.employee_id,
@@ -69,7 +69,7 @@ SELECT 	e.employee_id,
         p.name
 FROM employees e
 JOIN employees_projects em
-ON e.employee_id = em.employee_id
+ON em.employee_id = e.employee_id
 JOIN projects p
 ON em.project_id = p.project_id
 WHERE p.start_date > '2002-08-13' AND p.end_date is NULL
@@ -160,3 +160,23 @@ LEFT JOIN mountains_countries mc
 ON c.country_code = mc.country_code
 WHERE mc.mountain_id IS NULL;
 
+# 17.	Highest Peak and Longest River by Country
+SELECT c.country_name, 
+		MAX(p.elevation) AS highest_peak_elevation,
+        MAX(r.length) AS longest_river_length
+FROM countries c
+JOIN countries_rivers AS cr
+ON c.country_code = cr.country_code
+JOIN rivers AS r
+ON cr.river_id = r.id
+JOIN mountains_countries AS mc
+ON mc.country_code = c.country_code
+JOIN mountains AS m
+ON mc.mountain_id = m.id
+JOIN peaks p
+ON p.mountain_id = m.id
+GROUP BY c.country_name
+ORDER BY highest_peak_elevation DESC,
+longest_river_length DESC,
+c.country_name
+LIMIT 5;
