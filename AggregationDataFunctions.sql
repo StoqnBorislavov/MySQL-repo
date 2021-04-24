@@ -162,6 +162,18 @@ WHERE e.salary < second_max_salary.second_salary
 GROUP BY e.department_id
 ORDER BY e.department_id;
 
+# 18.	 Salary Challenge**
+SELECT e.`first_name`, 
+	   e.`last_name`,
+       e.`department_id`
+FROM employees AS e
+WHERE e.`salary` > 
+(SELECT AVG(em.`salary`) FROM employees AS em
+WHERE e.`department_id` = em.`department_id`)
+ORDER BY e.`department_id`
+LIMIT 10;
+
+
 # 19.	Departments Total Salaries
 SELECT e.department_id, SUM(e.salary) AS total_salary
 FROM employees e
