@@ -63,4 +63,114 @@ DELIMITER ;
 SELECT ufn_get_salary_level(500001);
 
 
+# 6.	Employees by Salary Level
+DELIMITER $$
+CREATE PROCEDURE usp_get_employees_by_salary_level(level_of_salary VARCHAR(10))
+BEGIN
+	SELECT e.first_name, e.last_name, ufn_get_salary_level(e.salary)
+	FROM employees e
+    WHERE ufn_get_salary_level(e.salary) = level_of_salary
+	ORDER BY e.first_name DESC, e.last_name DESC;
+END $$
+DELIMITER ;
+CALL usp_get_employees_by_salary_level('High');	
 
+# 8.	Find Full Name
+DELIMITER $$
+CREATE PROCEDURE usp_get_holders_full_name()
+BEGIN
+	SELECT concat(ah.first_name, ' ', ah.last_name) AS full_name
+    FROM account_holders ah
+	ORDER BY full_name ASC;
+END $$
+DELIMITER ;
+CALL usp_get_holders_full_name();
+
+# 9.	People with Balance Higher Than
+
+DELIMITER $$
+CREATE PROCEDURE usp_get_holders_with_balance_higher_than(sum_of_balance INT) 
+BEGIN
+		SELECT ah.first_name, ah.last_name
+		FROM account_holders ah
+		JOIN accounts a
+		ON ah.id = a.account_holder_id
+		GROUP BY a.account_holder_id
+		HAVING SUM(a.balance) > sum_of_balance
+		ORDER BY ah.first_name, ah.last_name, a.id;
+END $$
+DELIMITER ;
+CALL usp_get_holders_with_balance_higher_than(7000);
+
+# 10.	Future Value Function
+DELIMITER $$
+CREATE FUNCTION ufn_calculate_future_value(sum DECIMAL(19,4), interest DOUBLE, years INT)
+RETURNS DECIMAL(19,4)
+DETERMINISTIC
+BEGIN
+	RETURN sum * POW(1 + interest, years);
+END $$
+DELIMITER ;
+SELECT ufn_calculate_future_value(1000, 0.1, 5);
+
+# 11.	Calculating Interest
+DELIMITER $$
+CREATE PROCEDURE usp_calculate_future_value_for_account(account_id INT, interest_rate DECIMAL(19,4))
+BEGIN
+	SELECT a.id AS account_id, ah.first_name, ah.last_name,
+			a.balance AS current_balance,
+            ufn_calculate_future_value(a.balance, interest_rate, 5) AS balance_in_5_years
+	FROM account_holders ah
+    JOIN accounts a
+    ON a.account_holder_id = ah.id
+    WHERE a.id = account_id;
+END $$
+DELIMITER ;
+CALL usp_calculate_future_value_for_account(1, 0.1);
+
+# 12.	Deposit Money
+DELIMITER $$
+CREATE PROCEDURE usp_deposit_money(account_id INT, money_amount DECIMAL(19,4))
+BEGIN
+	START TRANSACTION;
+	IF(SELECT COUNT(*) FROM accounts WHERE id = account_id) = 0
+		OR (money_amount <= 0)
+		THEN ROLLBACK;
+    ELSE 
+		UPDATE accounts
+        SET balance = balance + money_amount
+        WHERE id = account_id;
+	END IF;
+END $$
+
+# 13.	Withdraw Money
+CREATE PROCEDURE usp_withdraw_money(account_id INT, money_amount DECIMAL(19,4))
+BEGIN
+	START TRANSACTION;
+	IF(SELECT COUNT(*) FROM accounts WHERE id = account_id) = 0
+		OR (money_amount <= 0)
+        OR ((SELECT a.balance FROM accounts a WHERE a.id = account_id) >= money_amount) 
+		THEN ROLLBACK;
+    ELSE 
+		UPDATE accounts
+        SET balance = balance - money_amount
+        WHERE id = account_id;
+	END IF;
+END $$
+
+# 15.	Log Accounts Trigger
+CREATE TABLE logs(
+				log_id INT PRIMARY KEY AUTO_INCREMENT,
+				account_id INT,
+				old_sum DECIMAL(19,2),
+				new_sum DECIMAL(19,2)
+				);
+DELIMITER $$
+CREATE TRIGGER tr_update_accounts
+AFTER UPDATE
+ON accounts
+FOR EACH ROW
+BEGIN
+	INSERT INTO logs(account_id, old_sum, new_sum)
+    VALUES(OLD.id, OLD.balance, NEW.balance);
+END $$
