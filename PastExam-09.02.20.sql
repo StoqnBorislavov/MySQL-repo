@@ -81,3 +81,86 @@ CREATE TABLE `players_coaches`(
     FOREIGN KEY (`coach_id`)
     REFERENCES `coaches`(`id`)
 );
+
+# 2. Insert
+INSERT INTO `coaches`(`first_name`,`last_name`,`salary`,`coach_level`)
+SELECT `first_name`, `last_name`, `salary` * 2, 
+char_length(`first_name`)
+FROM `players`
+WHERE `age` >= 45; 
+
+# 3. Update
+UPDATE `coaches`
+SET `coach_level` = `coach_level` + 1
+WHERE LEFT(`first_name`, 1) = 'A'
+AND `id` IN (SELECT `coach_id` FROM `players_coaches`);
+
+# 4. DELETE 
+DELETE FROM `players`
+WHERE `age` >= 45;
+
+# 5. Players 
+SELECT first_name, age, salary FROM players
+ORDER BY salary DESC;
+
+# 6.	Young offense players without contract
+SELECT p.id, 
+		concat(p.first_name, ' ', p.last_name) AS full_name,
+        p.age,
+        p.position,
+        p.hire_date
+FROM players p
+JOIN skills_data sd
+ON p.skills_data_id = sd.id
+WHERE position = 'A' 
+AND hire_date IS NULL 
+AND sd.strength > 50 
+AND p.age < 23
+ORDER BY salary, age;
+
+# 7.	Detail info for all teams
+SELECT 
+    t.name AS team_name,
+    t.established,
+    t.fan_base,
+    COUNT(p.id) AS players_count
+FROM teams t
+LEFT JOIN players p 
+ON p.team_id = t.id
+GROUP BY t.id
+ORDER BY players_count DESC , t.fan_base DESC;
+
+# 8.	The fastest player by towns
+SELECT MAX(sd.speed) AS max_speed, t.name AS town_name
+FROM towns t
+LEFT JOIN stadiums s
+ON t.id = s.town_id
+LEFT JOIN teams te
+ON s.id = te.stadium_id
+LEFT JOIN players p
+ON te.id = p.team_id
+LEFT JOIN skills_data sd
+ON sd.id = p.skills_data_id
+WHERE te.name != 'Devify'
+GROUP BY t.id
+ORDER BY max_speed DESC, town_name;
+
+# 9. Total salaries and players by country
+
+SELECT c.name, 
+	COUNT(p.id) AS total_count_of_players,
+	SUM(p.salary) AS total_sum_of_salaries	
+FROM players p
+JOIN teams ts
+ON ts.id = p.team_id
+JOIN stadiums s
+ON ts.stadium_id = s.id
+JOIN towns t
+ON s.town_id = t.id
+RIGHT JOIN countries c
+ON  t.country_id = c.id
+GROUP BY c.id
+ORDER BY total_count_of_players DESC, c.name;
+
+# 10.	Find all players that play on stadium
+
